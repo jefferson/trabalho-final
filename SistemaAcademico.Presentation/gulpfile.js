@@ -4,6 +4,7 @@
     bower = require('gulp-bower'),
 	uglify = require('gulp-uglify'),
 	concat = require('gulp-concat');
+    KarmaServer = require('karma').Server;
 
 var config = {
     sassPath: './Web/sass',
@@ -48,6 +49,14 @@ gulp.task('js', function() {
 gulp.task('watch', function () {
 	gulp.watch(config.jsPath+'/**/*.js', ['js']);
     gulp.watch(config.sassPath + '/**/*.scss', ['css']);
+});
+
+//gulp karma- executa os testes apenas uma vez e exibe na tela de output o resulado
+gulp.task('test', function (done) {
+    new KarmaServer({
+        configFile: __dirname + '/karma.conf.js',
+        singleRun: true
+    }, done).start();
 });
 
 gulp.task('default', ['bower', 'icons', 'css', 'js']);

@@ -1,5 +1,6 @@
 'use strict';
 var app = angular.module('sistemaAcademico', ['ngRoute', 'LocalStorageModule']);
+
 app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
     /* Início - dasativar cache e status 304 - not modified*/

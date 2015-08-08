@@ -9,6 +9,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentatio
 	ProjectSection(SolutionItems) = preProject
 		SistemaAcademico.Presentation\bower.json = SistemaAcademico.Presentation\bower.json
 		SistemaAcademico.Presentation\gulpfile.js = SistemaAcademico.Presentation\gulpfile.js
+		SistemaAcademico.Presentation\karma.conf.js = SistemaAcademico.Presentation\karma.conf.js
 		SistemaAcademico.Presentation\package.json = SistemaAcademico.Presentation\package.json
 	EndProjectSection
 EndProject

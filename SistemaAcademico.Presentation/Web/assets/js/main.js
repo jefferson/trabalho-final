@@ -1,5 +1,6 @@
 'use strict';
 var app = angular.module('sistemaAcademico', ['ngRoute', 'LocalStorageModule']);
+
 app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
     /* Início - dasativar cache e status 304 - not modified*/
@@ -52,7 +53,10 @@ app.controller('headerCtrl', function ($scope, $location, authService) {
 'user strict';
 
 app.controller('loginCtrl', function ($scope, $location, authService) {
+
     $scope.message = "";
+    $scope.name = "mickey mouse";
+
 
     $scope.login = function (user) {
         authService.login(user).then(function (response) {
