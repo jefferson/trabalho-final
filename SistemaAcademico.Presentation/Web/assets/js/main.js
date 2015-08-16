@@ -28,9 +28,21 @@ app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpPr
         templateUrl: 'partials/students/index.html',
         controller: 'studentsHomeCtrl'
     }).
-    when('/student/info/scores', {
-        templateUrl: 'partials/students/scores.html',
-        controller: 'studentsScoresCtrl'
+    when('/coordinator/info', {
+        templateUrl: 'partials/coordinators/index.html',
+        controller: 'coordinatorsHomeCtrl'
+    }).
+    when('/coordinator/info-by-course/:param1', {
+        templateUrl: 'partials/coordinators/course.html',
+        controller: 'coordinatorInfoCourseCtrl'
+    }).
+    when('/coordinator/info-by-student/:param1', {
+        templateUrl: 'partials/coordinators/student.html',
+        controller: 'coordinatorInfoStudentCtrl'
+    }).
+    when('/secretary/info', {
+        templateUrl: 'partials/secretaries/index.html',
+        controller: 'secretariesHomeCtrl'
     }).
     otherwise({
         redirectTo: '/login'
@@ -41,6 +53,76 @@ app.run(['authService', function (authService) {
     authService.fillAuthData();
 }]);
 
+
+
+
+(function () {
+    'user strict';
+    app.controller('coordinatorInfoCourseCtrl', function ($scope, $filter, $routeParams, coordinatorService, authService, dateFilter) {
+        var courseId = $routeParams.param1;
+        coordinatorService.getInfoByCourse(authService.authentication.userName, courseId).then(function (response) {
+           
+            console.log(response)
+            $scope.coordinator = response;
+        },
+        function (err) {
+            //Pode-se criar uma mensagem ao usuário de erro, ou criar um ponto de log, pois será muito provável erro na API (404 ou 500).
+            //usuario nao encontrado
+            console.log(err)
+        });
+    });
+})();
+
+
+(function () {
+    'user strict';
+    app.controller('coordinatorInfoStudentCtrl', function ($scope, $filter, $routeParams, coordinatorService, authService, dateFilter) {
+        var studentUserName = $routeParams.param1;
+        var allScores = [];
+        coordinatorService.getInfoByStudent(authService.authentication.userName, studentUserName).then(function (response) {
+            $scope.coordinator = response;
+            allScores = response.Info.Student.Scores;
+        },
+        function (err) {
+            //Pode-se criar uma mensagem ao usuário de erro, ou criar um ponto de log, pois será muito provável erro na API (404 ou 500).
+            //usuario nao encontrado
+            console.log(err)
+        });
+        $scope.filter = {
+            option: 'subject'
+        };
+
+        $scope.filterByDate = function (s, e) {
+            $scope.coordinator.Info.Student.Scores = $filter('searchByDate')(allScores, $scope.startDateStr, $scope.endDateStr);
+        }
+
+        $scope.filterSelected = function () {
+            if ($scope.filter.option == 'subject') {
+                $('#subject-filter').show('slow');
+                $('#date-filter').hide('slow');
+                $scope.coordinator.Info.Student.Scores = allScores;
+            } else {
+                $scope.searchSubject = '';
+                $('#date-filter').show('slow');
+                $('#subject-filter').hide('slow');
+            }
+        }
+    });
+})();
+
+(function () {
+    'user strict';
+    app.controller('coordinatorsHomeCtrl', function ($scope, $filter, coordinatorService, authService, dateFilter) {
+        coordinatorService.getInfoCoordinator(authService.authentication.userName).then(function (response) {
+            $scope.coordinator = response;
+        },
+        function (err) {
+            //Pode-se criar uma mensagem ao usuário de erro, ou criar um ponto de log, pois será muito provável erro na API (404 ou 500).
+            //usuario nao encontrado
+            console.log(err)
+        });       
+    });
+})();
 
 'user strict';
 
@@ -62,7 +144,14 @@ app.controller('loginCtrl', function ($scope, $location, authService) {
     $scope.login = function (user) {
         authService.login(user).then(function (response) {
             $scope.authentication = authService.authentication;
-            $location.path('/student/info');
+            if ($.inArray('student',  $scope.authentication.roles) > -1) {
+                $location.path('/student/info');
+            } else if ($.inArray('coordinator',  $scope.authentication.roles) > -1) {
+                $location.path('/coordinator/info');
+            } else { //secretary
+                $location.path('/secretary/info');
+            }
+            
         },
          function (err) {
              $scope.message = err.error_description;
@@ -73,10 +162,21 @@ app.controller('loginCtrl', function ($scope, $location, authService) {
 
 (function () {
     'user strict';
-    app.controller('studentsHomeCtrl', function ($scope, studentService, authService, dateFilter) {
+    app.controller('secretariesHomeCtrl', function ($scope, $filter, studentService, authService, dateFilter) {
+
+    });
+
+
+
+})();
+
+(function () {
+    'user strict';
+    app.controller('studentsHomeCtrl', function ($scope, $filter, studentService, authService, dateFilter) {
+        var allScores = [];
         studentService.getInfoStudent(authService.authentication.userName).then(function (response) {
             $scope.student = response;
-
+            allScores = response.Scores;
         },
         function (err) {
             //Pode-se criar uma mensagem ao usuário de erro, ou criar um ponto de log, pois será muito provável erro na API (404 ou 500).
@@ -90,22 +190,13 @@ app.controller('loginCtrl', function ($scope, $location, authService) {
             if ($scope.filter.option == 'subject') {
                 $('#subject-filter').show('slow');
                 $('#date-filter').hide('slow');
+                $scope.student.Scores = allScores;
             } else {
+                $scope.searchSubject = '';
                 $('#date-filter').show('slow');
                 $('#subject-filter').hide('slow');
             }
         }
-        //Opções tipo de filtro
-        $scope.filter = {
-            option: 'subject'
-        };
-
-        //Opção escolhida - filtro por disciplina
-        $scope.filterBySubject = function () {
-            if ($scope.subjectSelected != null)
-                console.log($scope.subjectSelected)
-
-        };
 
         //Opção escolhida - filtro por data
         $scope.verifyDate = function () {
@@ -113,7 +204,7 @@ app.controller('loginCtrl', function ($scope, $location, authService) {
                 var startDateChoosed = new Date($scope.startDateStr);
                 var endDateChoosed = new Date($scope.endDateStr);
                 if (startDateChoosed <= endDateChoosed) {
-                    console.log('post');
+                    //console.log($scope.student[0])
                     return false;
                 } else {
                     console.log('data inicial menor que final')
@@ -121,11 +212,9 @@ app.controller('loginCtrl', function ($scope, $location, authService) {
             }
             return true;
         }
-
-        $scope.filterByDate = function () {
-            //post;
+        $scope.filterByDate = function (s, e) {
+            $scope.student.Scores = $filter('searchByDate')(allScores, $scope.startDateStr, $scope.endDateStr);
         }
-
     });
 
     app.directive('smallerdate', function () {
@@ -133,6 +222,7 @@ app.controller('loginCtrl', function ($scope, $location, authService) {
             require: 'ngModel',
             link: function (scope, elm, attrs, ctrl) {
                 ctrl.$validators.smallerdate = function (modelValue, viewValue) {
+                    return true;
                     if (ctrl.$isEmpty(modelValue)) {
                         // consider empty models to be valid
                         return true;
@@ -171,21 +261,6 @@ app.controller('loginCtrl', function ($scope, $location, authService) {
     //    };
     //});
 
-
-})();
-
-(function () {
-    'user strict';
-    app.controller('studentsScoresCtrl', function ($scope, studentService, authService) {
-        //studentService.getInfoStudent(authService.authentication.userName).then(function (response) {
-        //    $scope.student = response;
-        //},
-        //function (err) {
-        //    //Pode-se criar uma mensagem ao usuário de erro, ou criar um ponto de log, pois será muito provável erro na API (404 ou 500).
-        //    //usuario nao encontrado
-        //    console.log(err)
-        //});
-    });
 })();
 
     'use strict';
@@ -194,6 +269,24 @@ app.controller('loginCtrl', function ($scope, $location, authService) {
             templateUrl: 'partials/tpl/login.tpl.html'
         }
     });
+
+(function () {
+    app.filter("searchByDate", function () {
+        return function (items, start, end) {
+            var arrayToReturn = [];
+            for (var i = 0; i < items.length; i++) {
+                var s = new Date(items[i].StartDate);
+                var st = new Date(start);
+                var e = new Date(end);
+                s.setDate(s.getDate() + 1);
+                if (s >= st && s <= e)
+                    arrayToReturn.push(items[i]);
+            }
+            return arrayToReturn
+        };
+    });
+
+})();
 
 (function () {
     'use strict';
@@ -278,21 +371,58 @@ app.factory('authService', ['$http', '$q', 'localStorageService', function ($htt
 }]);
 (function () {
     'use strict';
-    app.factory('studentService', ['$http', '$q', function ($http, $q) {
-        var studentServiceFactory = {};
+    app.factory('coordinatorService', ['$http', '$q', function ($http, $q) {
+        var coordinatorServiceFactory = {};
         var serviceBase = 'http://localhost:50689/';
 
         //https://docs.angularjs.org/api/ng/service/$q
-        var _getAllStudents = function () {
-            var students = [];
+        var _getInfoCoordinator = function (userName) {
             var deferred = $q.defer();
-            $http.get(serviceBase + 'api/students/').success(function (res) {
+            $http.get(serviceBase + 'api/coordinators/info/?username=' + userName).success(function (res) {
                 deferred.resolve(res);
             }).error(function (err, status) {
                 deferred.reject(err);
             });
             return deferred.promise;
         };
+
+        var _getInfoByCourse = function (userName, courseId) {
+            var deferred = $q.defer();
+            $http.get(serviceBase + 'api/coordinators/info-by-course/?username=' + userName + '&courseId=' + courseId).success(function (res) {
+                deferred.resolve(res);
+            }).error(function (err, status) {
+                deferred.reject(err);
+            });
+            return deferred.promise;
+        };
+
+        var _getInfoByStudent = function (userName, studentUserName) {
+            var deferred = $q.defer();
+            $http.get(serviceBase + 'api/coordinators/info-by-student/?username=' + userName + '&studentUserName=' + studentUserName).success(function (res) {
+                deferred.resolve(res);
+            }).error(function (err, status) {
+                deferred.reject(err);
+            });
+            return deferred.promise;
+        };
+
+
+        coordinatorServiceFactory.getInfoCoordinator = _getInfoCoordinator;
+        coordinatorServiceFactory.getInfoByCourse = _getInfoByCourse;
+        coordinatorServiceFactory.getInfoByStudent = _getInfoByStudent;
+        return coordinatorServiceFactory;
+    }]);
+
+})();
+
+(function () {
+    'use strict';
+    app.factory('studentService', ['$http', '$q', function ($http, $q) {
+        var studentServiceFactory = {};
+        var serviceBase = 'http://localhost:50689/';
+
+        //https://docs.angularjs.org/api/ng/service/$q
+
 
         var _getInfoStudent = function (userName) {
             var deferred = $q.defer();
@@ -304,7 +434,7 @@ app.factory('authService', ['$http', '$q', 'localStorageService', function ($htt
             return deferred.promise;
         };
 
-        studentServiceFactory.getAllStudents = _getAllStudents;
+
         studentServiceFactory.getInfoStudent = _getInfoStudent;
         return studentServiceFactory;
     }]);

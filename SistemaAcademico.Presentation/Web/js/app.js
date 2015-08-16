@@ -28,9 +28,21 @@ app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpPr
         templateUrl: 'partials/students/index.html',
         controller: 'studentsHomeCtrl'
     }).
-    when('/student/info/scores', {
-        templateUrl: 'partials/students/scores.html',
-        controller: 'studentsScoresCtrl'
+    when('/coordinator/info', {
+        templateUrl: 'partials/coordinators/index.html',
+        controller: 'coordinatorsHomeCtrl'
+    }).
+    when('/coordinator/info-by-course/:param1', {
+        templateUrl: 'partials/coordinators/course.html',
+        controller: 'coordinatorInfoCourseCtrl'
+    }).
+    when('/coordinator/info-by-student/:param1', {
+        templateUrl: 'partials/coordinators/student.html',
+        controller: 'coordinatorInfoStudentCtrl'
+    }).
+    when('/secretary/info', {
+        templateUrl: 'partials/secretaries/index.html',
+        controller: 'secretariesHomeCtrl'
     }).
     otherwise({
         redirectTo: '/login'

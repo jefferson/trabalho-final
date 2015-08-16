@@ -1,8 +1,8 @@
 ﻿
 <div class="row">
     <div class="col-sm-12">
-        <p><b>Nome: </b>{{student.UserName}}</p>
-        <p><b>E-mail: </b>{{student.Email}}</p>
+        <p><b>Nome: </b>{{coordinator.Info.Student.UserName}}</p>
+        <p><b>E-mail: </b>{{coordinator.Info.Student.Email}}</p>
     </div>
 </div>
 <br />
@@ -67,7 +67,7 @@
                 </tr>
             </thead>
             <tbody>
-                <tr ng-repeat="x in student.Scores | filter:searchSubject | filter:searchByDate:endDateStr">
+                <tr ng-repeat="x in coordinator.Info.Student.Scores | filter:searchSubject | filter:searchByDate:endDateStr">
                     <td>{{x.SchoolClass}}</td>
                     <td>{{x.Subject}}</td>
                     <td>{{x.StartDate | date:'dd/MM/yyyy'}} a {{x.EndDate | date:'dd/MM/yyyy'}}</td>
