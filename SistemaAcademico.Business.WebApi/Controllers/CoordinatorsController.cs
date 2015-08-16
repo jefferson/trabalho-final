@@ -79,9 +79,10 @@ namespace SistemaAcademico.Business.WebApi.Controllers
                                                 .Where(y => y.Students.Any(z => z.UserName == studentUserName))
                                                 .Select(y => new
                                                 {
+                                                    CourseId = y.Id,
                                                     Student = y.Students.Select(s => new
                                                     {
-                                                        UserName = userName,
+                                                        UserName = studentUserName,
                                                         Email = s.Email,
                                                         Scores = s.Scores.OrderBy(j => j.SchoolClass.StarDate).Select(k => new
                                                         {

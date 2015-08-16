@@ -1,5 +1,5 @@
 'use strict';
-var app = angular.module('sistemaAcademico', ['ngRoute', 'LocalStorageModule']);
+var app = angular.module('sistemaAcademico', ['ngRoute', 'LocalStorageModule', 'angular-loading-bar']);
 app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
     /* Início - dasativar cache e status 304 - not modified*/
@@ -43,6 +43,10 @@ app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpPr
     when('/secretary/info', {
         templateUrl: 'partials/secretaries/index.html',
         controller: 'secretariesHomeCtrl'
+    }).
+    when('/secretary/info-by-student/:param1', {
+        templateUrl: 'partials/secretaries/student.html',
+        controller: 'secretariesInfoStudentCtrl'
     }).
     otherwise({
         redirectTo: '/login'

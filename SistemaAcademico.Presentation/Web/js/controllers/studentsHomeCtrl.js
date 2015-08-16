@@ -7,11 +7,10 @@
             allScores = response.Scores;
         },
         function (err) {
-            //Pode-se criar uma mensagem ao usuário de erro, ou criar um ponto de log, pois será muito provável erro na API (404 ou 500).
-            //usuario nao encontrado
-            console.log(err)
         });
-
+        $scope.filter = {
+            option: 'subject'
+        };
 
         //Escolhe o tipo de filtro
         $scope.filterSelected = function () {
@@ -32,61 +31,16 @@
                 var startDateChoosed = new Date($scope.startDateStr);
                 var endDateChoosed = new Date($scope.endDateStr);
                 if (startDateChoosed <= endDateChoosed) {
-                    //console.log($scope.student[0])
                     return false;
-                } else {
-                    console.log('data inicial menor que final')
                 }
             }
             return true;
         }
         $scope.filterByDate = function (s, e) {
-            $scope.student.Scores = $filter('searchByDate')(allScores, $scope.startDateStr, $scope.endDateStr);
+            if (new Date($scope.startDateStr) <= new Date($scope.endDateStr))
+                $scope.student.Scores = $filter('searchByDate')(allScores, $scope.startDateStr, $scope.endDateStr);
+            else
+                alert("Data inicial maior que data final. Por favor, altere!");
         }
     });
-
-    app.directive('smallerdate', function () {
-        return {
-            require: 'ngModel',
-            link: function (scope, elm, attrs, ctrl) {
-                ctrl.$validators.smallerdate = function (modelValue, viewValue) {
-                    return true;
-                    if (ctrl.$isEmpty(modelValue)) {
-                        // consider empty models to be valid
-                        return true;
-                    }
-
-                    if (modelValue <= scope.endDateStr) {
-                        // it is valid
-                        return true;
-                    }
-
-                    // it is invalid
-                    return false;
-                };
-            }
-        };
-    });
-    //app.directive('biggerdate', function () {
-    //    return {
-    //        require: 'ngModel',
-    //        link: function (scope, elm, attrs, ctrl) {
-    //            ctrl.$validators.biggerdate = function (modelValue, viewValue) {
-    //                if (ctrl.$isEmpty(modelValue)) {
-    //                    // consider empty models to be valid
-    //                    return true;
-    //                }
-
-    //                if (modelValue > scope.startDateStr) {
-    //                    // it is valid
-    //                    return true;
-    //                }
-
-    //                // it is invalid
-    //                return false;
-    //            };
-    //        }
-    //    };
-    //});
-
 })();
