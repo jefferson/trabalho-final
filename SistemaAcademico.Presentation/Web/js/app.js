@@ -1,6 +1,5 @@
 'use strict';
-var app = angular.module('sistemaAcademico', ['ngRoute', 'LocalStorageModule']);
-
+var app = angular.module('sistemaAcademico', ['ngRoute', 'LocalStorageModule', 'angular-loading-bar']);
 app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
     /* Início - dasativar cache e status 304 - not modified*/
@@ -25,9 +24,29 @@ app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpPr
         templateUrl: 'partials/login.html',
         controller: 'loginCtrl'
     }).
-    when('/students', {
+    when('/student/info', {
         templateUrl: 'partials/students/index.html',
-        controller: 'studentsListCtrl'
+        controller: 'studentsHomeCtrl'
+    }).
+    when('/coordinator/info', {
+        templateUrl: 'partials/coordinators/index.html',
+        controller: 'coordinatorsHomeCtrl'
+    }).
+    when('/coordinator/info-by-course/:param1', {
+        templateUrl: 'partials/coordinators/course.html',
+        controller: 'coordinatorInfoCourseCtrl'
+    }).
+    when('/coordinator/info-by-student/:param1', {
+        templateUrl: 'partials/coordinators/student.html',
+        controller: 'coordinatorInfoStudentCtrl'
+    }).
+    when('/secretary/info', {
+        templateUrl: 'partials/secretaries/index.html',
+        controller: 'secretariesHomeCtrl'
+    }).
+    when('/secretary/info-by-student/:param1', {
+        templateUrl: 'partials/secretaries/student.html',
+        controller: 'secretariesInfoStudentCtrl'
     }).
     otherwise({
         redirectTo: '/login'

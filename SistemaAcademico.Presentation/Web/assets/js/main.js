@@ -1,6 +1,10 @@
 'use strict';
+<<<<<<< HEAD
 var app = angular.module('sistemaAcademico', ['ngRoute', 'LocalStorageModule']);
 
+=======
+var app = angular.module('sistemaAcademico', ['ngRoute', 'LocalStorageModule', 'angular-loading-bar']);
+>>>>>>> 133c03f35b748ab4537fec9f0e276d83252f95ce
 app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpProvider) {
 
     /* In�cio - dasativar cache e status 304 - not modified*/
@@ -25,9 +29,29 @@ app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpPr
         templateUrl: 'partials/login.html',
         controller: 'loginCtrl'
     }).
-    when('/students', {
+    when('/student/info', {
         templateUrl: 'partials/students/index.html',
-        controller: 'studentsListCtrl'
+        controller: 'studentsHomeCtrl'
+    }).
+    when('/coordinator/info', {
+        templateUrl: 'partials/coordinators/index.html',
+        controller: 'coordinatorsHomeCtrl'
+    }).
+    when('/coordinator/info-by-course/:param1', {
+        templateUrl: 'partials/coordinators/course.html',
+        controller: 'coordinatorInfoCourseCtrl'
+    }).
+    when('/coordinator/info-by-student/:param1', {
+        templateUrl: 'partials/coordinators/student.html',
+        controller: 'coordinatorInfoStudentCtrl'
+    }).
+    when('/secretary/info', {
+        templateUrl: 'partials/secretaries/index.html',
+        controller: 'secretariesHomeCtrl'
+    }).
+    when('/secretary/info-by-student/:param1', {
+        templateUrl: 'partials/secretaries/student.html',
+        controller: 'secretariesInfoStudentCtrl'
     }).
     otherwise({
         redirectTo: '/login'
@@ -37,6 +61,66 @@ app.config(['$routeProvider', '$httpProvider', function ($routeProvider, $httpPr
 app.run(['authService', function (authService) {
     authService.fillAuthData();
 }]);
+
+
+
+
+(function () {
+    'user strict';
+    app.controller('coordinatorInfoCourseCtrl', function ($scope, $filter, $routeParams, coordinatorService, authService, dateFilter) {
+        var courseId = $routeParams.param1;
+        coordinatorService.getInfoByCourse(authService.authentication.userName, courseId).then(function (response) {
+           $scope.coordinator = response;
+        },
+        function (err) {
+        });
+    });
+})();
+
+
+(function () {
+    'user strict';
+    app.controller('coordinatorInfoStudentCtrl', function ($scope, $filter, $routeParams, coordinatorService, authService, dateFilter) {
+        var studentUserName = $routeParams.param1;
+        var allScores = [];
+        coordinatorService.getInfoByStudent(authService.authentication.userName, studentUserName).then(function (response) {
+            $scope.coordinator = response;
+            allScores = response.Info.Student.Scores;
+        },
+        function (err) {
+        });
+        $scope.filter = {
+            option: 'subject'
+        };
+
+        $scope.filterByDate = function (s, e) {
+            $scope.coordinator.Info.Student.Scores = $filter('searchByDate')(allScores, $scope.startDateStr, $scope.endDateStr);
+        }
+
+        $scope.filterSelected = function () {
+            if ($scope.filter.option == 'subject') {
+                $('#subject-filter').show('slow');
+                $('#date-filter').hide('slow');
+                $scope.coordinator.Info.Student.Scores = allScores;
+            } else {
+                $scope.searchSubject = '';
+                $('#date-filter').show('slow');
+                $('#subject-filter').hide('slow');
+            }
+        }
+    });
+})();
+
+(function () {
+    'user strict';
+    app.controller('coordinatorsHomeCtrl', function ($scope, $filter, coordinatorService, authService, dateFilter) {
+        coordinatorService.getInfoCoordinator(authService.authentication.userName).then(function (response) {
+            $scope.coordinator = response;
+        },
+        function (err) {
+        });       
+    });
+})();
 
 'user strict';
 
@@ -59,7 +143,14 @@ app.controller('loginCtrl', function ($scope, $location, authService) {
     $scope.login = function (user) {
         authService.login(user).then(function (response) {
             $scope.authentication = authService.authentication;
-            $location.path('/students');
+            if ($.inArray('student',  $scope.authentication.roles) > -1) {
+                $location.path('/student/info');
+            } else if ($.inArray('coordinator',  $scope.authentication.roles) > -1) {
+                $location.path('/coordinator/info');
+            } else { //secretary
+                $location.path('/secretary/info');
+            }
+            
         },
          function (err) {
              $scope.message = err.error_description;
@@ -70,18 +161,71 @@ app.controller('loginCtrl', function ($scope, $location, authService) {
 
 (function () {
     'user strict';
-    app.controller('studentsListCtrl', function ($scope, studentService) {
-        studentService.getAllStudents().then(function (response) {
-            var students = [];
-            angular.forEach(response, function (item) {
-                students.push(item);
-            });
-            $scope.students = students;
+    app.controller('secretariesHomeCtrl', function ($scope, $filter, secretaryService, authService, dateFilter) {
+        secretaryService.getAllStudents().then(function (response) {
+            $scope.secretary = response;
         },
         function (err) {
-            //Pode-se criar uma mensagem ao usuário de erro, ou criar um ponto de log, pois será muito provável erro na API (404 ou 500).
-            console.log(err)
         });
+    });
+})();
+
+(function () {
+    'user strict';
+    app.controller('secretariesInfoStudentCtrl', function ($scope, $filter, $routeParams, secretaryService, authService, dateFilter) {
+        var studentUserName = $routeParams.param1;
+        secretaryService.getInfoStudent(studentUserName).then(function (response) {
+            $scope.secretary = response;
+        },
+        function (err) {
+        });
+    });
+})();
+
+(function () {
+    'user strict';
+    app.controller('studentsHomeCtrl', function ($scope, $filter, studentService, authService, dateFilter) {
+        var allScores = [];
+        studentService.getInfoStudent(authService.authentication.userName).then(function (response) {
+            $scope.student = response;
+            allScores = response.Scores;
+        },
+        function (err) {
+        });
+        $scope.filter = {
+            option: 'subject'
+        };
+
+        //Escolhe o tipo de filtro
+        $scope.filterSelected = function () {
+            if ($scope.filter.option == 'subject') {
+                $('#subject-filter').show('slow');
+                $('#date-filter').hide('slow');
+                $scope.student.Scores = allScores;
+            } else {
+                $scope.searchSubject = '';
+                $('#date-filter').show('slow');
+                $('#subject-filter').hide('slow');
+            }
+        }
+
+        //Opção escolhida - filtro por data
+        $scope.verifyDate = function () {
+            if ($scope.startDateStr != undefined && $scope.endDateStr != undefined) {
+                var startDateChoosed = new Date($scope.startDateStr);
+                var endDateChoosed = new Date($scope.endDateStr);
+                if (startDateChoosed <= endDateChoosed) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        $scope.filterByDate = function (s, e) {
+            if (new Date($scope.startDateStr) <= new Date($scope.endDateStr))
+                $scope.student.Scores = $filter('searchByDate')(allScores, $scope.startDateStr, $scope.endDateStr);
+            else
+                alert("Data inicial maior que data final. Por favor, altere!");
+        }
     });
 })();
 
@@ -91,6 +235,24 @@ app.controller('loginCtrl', function ($scope, $location, authService) {
             templateUrl: 'partials/tpl/login.tpl.html'
         }
     });
+
+(function () {
+    app.filter("searchByDate", function () {
+        return function (items, start, end) {
+            var arrayToReturn = [];
+            for (var i = 0; i < items.length; i++) {
+                var s = new Date(items[i].StartDate);
+                var st = new Date(start);
+                var e = new Date(end);
+                s.setDate(s.getDate() + 1);
+                if (s >= st && s <= e)
+                    arrayToReturn.push(items[i]);
+            }
+            return arrayToReturn
+        };
+    });
+
+})();
 
 (function () {
     'use strict';
@@ -196,23 +358,106 @@ app.factory('authService', ['$http', '$q', 'localStorageService', function ($htt
 }]);
 (function () {
     'use strict';
-    app.factory('studentService', ['$http', '$q', function ($http, $q) {
-        var studentServiceFactory = {};
+    app.factory('coordinatorService', ['$http', '$q', function ($http, $q) {
+        var coordinatorServiceFactory = {};
         var serviceBase = 'http://localhost:50689/';
 
         //https://docs.angularjs.org/api/ng/service/$q
-        var _getAllStudents = function () {
-            var students = [];
+        var _getInfoCoordinator = function (userName) {
             var deferred = $q.defer();
-            $http.get(serviceBase + 'api/students/').success(function (res) {
+            $http.get(serviceBase + 'api/coordinators/info/?username=' + userName).success(function (res) {
                 deferred.resolve(res);
             }).error(function (err, status) {
                 deferred.reject(err);
             });
             return deferred.promise;
-        }
+        };
 
-        studentServiceFactory.getAllStudents = _getAllStudents;
+        var _getInfoByCourse = function (userName, courseId) {
+            var deferred = $q.defer();
+            $http.get(serviceBase + 'api/coordinators/info-by-course/?username=' + userName + '&courseId=' + courseId).success(function (res) {
+                deferred.resolve(res);
+            }).error(function (err, status) {
+                deferred.reject(err);
+            });
+            return deferred.promise;
+        };
+
+        var _getInfoByStudent = function (userName, studentUserName) {
+            var deferred = $q.defer();
+            $http.get(serviceBase + 'api/coordinators/info-by-student/?username=' + userName + '&studentUserName=' + studentUserName).success(function (res) {
+                deferred.resolve(res);
+            }).error(function (err, status) {
+                deferred.reject(err);
+            });
+            return deferred.promise;
+        };
+
+
+        coordinatorServiceFactory.getInfoCoordinator = _getInfoCoordinator;
+        coordinatorServiceFactory.getInfoByCourse = _getInfoByCourse;
+        coordinatorServiceFactory.getInfoByStudent = _getInfoByStudent;
+        return coordinatorServiceFactory;
+    }]);
+
+})();
+
+(function () {
+    'use strict';
+    app.factory('secretaryService', ['$http', '$q', function ($http, $q) {
+        var secretaryServiceFactory = {};
+        var serviceBase = 'http://localhost:50689/';
+        //https://docs.angularjs.org/api/ng/service/$q
+
+        var _getAllStudents = function () {
+            var deferred = $q.defer();
+            $http.get(serviceBase + 'api/secretaries/get-all-students/').success(function (res) {
+                deferred.resolve(res);
+            }).error(function (err, status) {
+                deferred.reject(err);
+            });
+            return deferred.promise;
+        };
+
+        var _getInfoStudent = function (studentUserName) {
+            var deferred = $q.defer();
+            $http.get(serviceBase + 'api/secretaries/get-info-student/?studentUserName=' + studentUserName).success(function (res) {
+                deferred.resolve(res);
+            }).error(function (err, status) {
+                deferred.reject(err);
+            });
+            return deferred.promise;
+        };
+
+
+        secretaryServiceFactory.getAllStudents = _getAllStudents;
+        secretaryServiceFactory.getInfoStudent = _getInfoStudent;
+        return secretaryServiceFactory;
+    }]);
+
+})();
+
+(function () {
+    'use strict';
+    app.factory('studentService', ['$http', '$q', function ($http, $q) {
+        var studentServiceFactory = {};
+        var serviceBase = 'http://localhost:50689/';
+
+        //https://docs.angularjs.org/api/ng/service/$q
+
+
+        var _getInfoStudent = function (userName) {
+            var deferred = $q.defer();
+            $http.get(serviceBase + 'api/students/info/?username=' + userName).success(function (res) {
+                deferred.resolve(res);
+            }).error(function (err, status) {
+                deferred.reject(err);
+            });
+            return deferred.promise;
+        };
+
+
+        studentServiceFactory.getInfoStudent = _getInfoStudent;
         return studentServiceFactory;
     }]);
 
