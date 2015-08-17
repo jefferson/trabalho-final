@@ -3,8 +3,6 @@
 app.controller('loginCtrl', function ($scope, $location, authService) {
 
     $scope.message = "";
-    $scope.name = "mickey mouse";
-
 
     $scope.login = function (user) {
         authService.login(user).then(function (response) {
